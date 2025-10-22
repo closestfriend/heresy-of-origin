@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CULTURAL MONAD OPTIMIZATION SYSTEM</title>
+    <style>
+        :root {
+            /* TERMINAL THEME (default) */
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #000;
+            --text-primary: #00ff00;
+            --text-secondary: #888;
+            --text-muted: #666;
+            --border-primary: #00ff00;
+            --border-secondary: #333;
+            --accent: #ffffff;
+        }
+
+        [data-theme="soft"] {
+            /* SOFT THEME */
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #222;
+            --text-primary: #d4c4a8;
+            --text-secondary: #999;
+            --text-muted: #777;
+            --border-primary: #8b7355;
+            --border-secondary: #444;
+            --accent: #f0f0f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', 'IBM Plex Mono', 'Courier New', monospace;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            padding: 20px;
+            font-size: 14px;
+            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border: 1px solid var(--border-primary);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 16px;
+            font-weight: normal;
+            margin-bottom: 5px;
+        }
+
+        .header .classification {
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: 1px solid var(--border-secondary);
+            color: var(--text-secondary);
+            padding: 8px 12px;
+            font-family: inherit;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .theme-toggle:hover {
+            border-color: var(--border-primary);
+            color: var(--text-primary);
+        }
+
+        .main-panel {
+            border: 1px solid var(--border-primary);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .section {
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .platform-selector {
+            margin-bottom: 20px;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 20px;
+        }
+
+        .radio-item {
+            cursor: pointer;
+        }
+
+        .radio-item input {
+            margin-right: 5px;
+        }
+
+        .generator-grid {
+            border: 1px solid var(--border-secondary);
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .generator-category {
+            margin-bottom: 15px;
+        }
+
+        .generator-category-title {
+            color: var(--text-secondary);
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+
+        .checkbox-item {
+            margin-bottom: 5px;
+            cursor: pointer;
+        }
+
+        .checkbox-item input {
+            margin-right: 5px;
+        }
+
+        .checkbox-item:hover {
+            color: var(--accent);
+        }
+
+        .params {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .param-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .param-group label {
+            color: var(--text-secondary);
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .param-group input,
+        .param-group select {
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-secondary);
+            color: var(--text-primary);
+            padding: 8px;
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+        .param-group input:focus,
+        .param-group select:focus {
+            outline: none;
+            border-color: var(--border-primary);
+        }
+
+        .execute-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-secondary);
+        }
+
+        .execute-button {
+            background-color: var(--bg-primary);
+            border: 2px solid var(--border-primary);
+            color: var(--text-primary);
+            padding: 12px 40px;
+            font-family: inherit;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .execute-button:hover {
+            background-color: var(--border-primary);
+            color: var(--bg-primary);
+        }
+
+        .execute-button:disabled {
+            border-color: var(--border-secondary);
+            color: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        .execute-button:disabled:hover {
+            background-color: var(--bg-primary);
+            color: var(--text-muted);
+        }
+
+        .status-display {
+            display: flex;
+            gap: 20px;
+            font-size: 12px;
+        }
+
+        .status-item {
+            color: var(--text-secondary);
+        }
+
+        .status-item span {
+            color: var(--text-primary);
+        }
+
+        .output-panel {
+            border: 1px solid var(--border-primary);
+            padding: 20px;
+        }
+
+        .output-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .output-item {
+            padding: 10px;
+            margin-bottom: 5px;
+            border: 1px solid var(--border-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .output-item:hover {
+            border-color: var(--border-primary);
+            color: var(--accent);
+        }
+
+        .output-item-name {
+            font-size: 14px;
+            margin-bottom: 3px;
+        }
+
+        .output-item-meta {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .modal.hidden {
+            display: none !important;
+        }
+
+        .log {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-secondary);
+            padding: 15px;
+            margin-top: 15px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .log-entry {
+            margin-bottom: 3px;
+        }
+
+        .log-timestamp {
+            color: var(--text-primary);
+        }
+
+        .error {
+            color: #ff6b6b;
+        }
+
+        .success {
+            color: var(--text-primary);
+        }
+
+        scrollbar {
+            width: 8px;
+        }
+
+        scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        scrollbar-thumb {
+            background: var(--border-secondary);
+        }
+
+        scrollbar-thumb:hover {
+            background: var(--border-primary);
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: var(--bg-primary);
+            border: 2px solid var(--border-primary);
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .article-locked {
+            opacity: 0.5;
+        }
+
+        textarea {
+            font-family: inherit;
+            resize: vertical;
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-secondary);
+            color: var(--text-primary);
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--border-primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button class="theme-toggle" id="theme-toggle">TERMINAL</button>
+        <div class="header">
+            <h1>CULTURAL MONAD OPTIMIZATION SYSTEM v0.1</h1>
+            <div class="classification">[CLASSIFICATION: ACCELERATIONIST CRITIQUE-THROUGH-PRACTICE]</div>
+        </div>
+
+        <div class="main-panel">
+            <div class="section platform-selector">
+                <div class="section-title">&gt; PLATFORM SELECT</div>
+                <div class="radio-group">
+                    <label class="radio-item">
+                        <input type="radio" name="platform" value="twitter" checked>
+                        TWITTER/X
+                    </label>
+                    <label class="radio-item">
+                        <input type="radio" name="platform" value="substack">
+                        SUBSTACK/LONGFORM
+                    </label>
+                </div>
+            </div>
+
+            <div class="section" id="twitter-generators">
+                <div class="section-title">&gt; TWITTER/X GENERATORS</div>
+                <div class="generator-grid">
+                    <div class="generator-category">
+                        <div class="generator-category-title">DEMOGRAPHICS</div>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="generator" value="twitter_soft_hard">
+                            Soft+Hard+Algorithmic (Technical)
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="generator" value="twitter_wizard">
+                            The Wizard (Implementation-Level)
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="generator" value="twitter_lived">
+                            Lived Experience (Phenomenological)
+                        </label>
+                    </div>
+                    <div class="generator-category">
+                        <div class="generator-category-title">CONTENT</div>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="generator" value="twitter_aphorisms">
+                            X Aphorisms (Engagement-Optimized)
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section hidden" id="substack-generators">
+                <div class="section-title">&gt; SUBSTACK/LONGFORM GENERATORS</div>
+                <div class="generator-grid">
+                    <div class="generator-category">
+                        <div class="generator-category-title">DEMOGRAPHICS</div>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="generator" value="substack_readers">
+                            Reader Demographics (Niche Personas)
+                        </label>
+                    </div>
+                    <div class="generator-category">
+                        <div class="generator-category-title">CONTENT</div>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="generator" value="substack_styles">
+                            Writing Styles (Literary Traditions)
+                        </label>
+                    </div>
+                    <div class="generator-category">
+                        <div class="generator-category-title">ARTICLE (requires demographics + styles)</div>
+                        <div id="article-generator-locked" class="article-locked">
+                            <div style="color: #666; font-size: 12px; margin-bottom: 10px;">
+                                [ LOCKED ] Generate demographics and styles first to unlock article generation
+                            </div>
+                        </div>
+                        <div id="article-generator-unlocked" class="hidden">
+                            <button class="checkbox-item" id="show-article-form" style="border: 1px solid #333; padding: 5px; background: #0a0a0a; cursor: pointer; width: 100%;">
+                                Long-form Article (Monad-Optimized) - Click to Configure
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Article Generator Modal -->
+            <div id="article-modal" class="modal hidden">
+                <div class="modal-content">
+                    <div class="section-title">&gt; ARTICLE GENERATOR</div>
+
+                    <div class="param-group" style="margin-bottom: 15px;">
+                        <label>TARGET READER DEMOGRAPHIC</label>
+                        <select id="article-demographic">
+                            <option value="">Loading...</option>
+                        </select>
+                    </div>
+
+                    <div class="param-group" style="margin-bottom: 15px;">
+                        <label>WRITING STYLE</label>
+                        <select id="article-style">
+                            <option value="">Loading...</option>
+                        </select>
+                    </div>
+
+                    <div class="param-group" style="margin-bottom: 15px;">
+                        <label>ARTICLE TOPIC/PROMPT</label>
+                        <textarea id="article-topic" rows="4" style="width: 100%; background: #0a0a0a; border: 1px solid #333; color: #00ff00; padding: 8px; font-family: inherit;"></textarea>
+                    </div>
+
+                    <div class="param-group" style="margin-bottom: 15px;">
+                        <label>OUTPUT LENGTH</label>
+                        <div class="radio-group" style="display: flex; gap: 15px; margin-top: 5px;">
+                            <label class="radio-item">
+                                <input type="radio" name="word-count" value="short">
+                                Short (~1500 words)
+                            </label>
+                            <label class="radio-item">
+                                <input type="radio" name="word-count" value="medium" checked>
+                                Medium (~3000 words)
+                            </label>
+                            <label class="radio-item">
+                                <input type="radio" name="word-count" value="long">
+                                Long (~5000 words)
+                            </label>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-top: 20px;">
+                        <button class="execute-button" id="generate-article-btn" style="flex: 1;">[ GENERATE ARTICLE ]</button>
+                        <button class="execute-button" id="cancel-article-btn" style="flex: 1; border-color: #666; color: #666;">[ CANCEL ]</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">&gt; PARAMETERS</div>
+                <div class="params">
+                    <div class="param-group">
+                        <label>COUNT</label>
+                        <input type="number" id="count" value="15" min="1" max="50">
+                    </div>
+                    <div class="param-group">
+                        <label>MODEL</label>
+                        <select id="model">
+                            <option value="o3-2025-04-16">o3-2025-04-16 (slow, high quality)</option>
+                            <option value="gpt-4o" selected>gpt-4o (fast, good quality)</option>
+                        </select>
+                    </div>
+                    <div class="param-group">
+                        <label>FORMAT</label>
+                        <select id="format">
+                            <option value="markdown">MARKDOWN</option>
+                            <option value="json">JSON</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="execute-section">
+                <button class="execute-button" id="execute-btn">[ EXECUTE ]</button>
+                <div class="status-display">
+                    <div class="status-item">STATUS: <span id="status">IDLE</span></div>
+                    <div class="status-item">TOKENS: <span id="tokens">0</span></div>
+                    <div class="status-item">COST: <span id="cost">$0.00</span></div>
+                </div>
+            </div>
+
+            <div class="log" id="log"></div>
+        </div>
+
+        <div class="output-panel">
+            <div class="section-title">&gt; OUTPUT FILES</div>
+            <div class="output-list" id="output-list">
+                <div style="color: #666; font-size: 12px;">No outputs yet. Execute a generator to begin.</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let currentPlatform = 'twitter';
+        let isGenerating = false;
+
+        // DOM Elements
+        const platformRadios = document.querySelectorAll('input[name="platform"]');
+        const twitterSection = document.getElementById('twitter-generators');
+        const substackSection = document.getElementById('substack-generators');
+        const executeBtn = document.getElementById('execute-btn');
+        const logEl = document.getElementById('log');
+        const outputListEl = document.getElementById('output-list');
+        const statusEl = document.getElementById('status');
+        const tokensEl = document.getElementById('tokens');
+        const costEl = document.getElementById('cost');
+
+        // Platform switching
+        platformRadios.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                currentPlatform = e.target.value;
+                if (currentPlatform === 'twitter') {
+                    twitterSection.classList.remove('hidden');
+                    substackSection.classList.add('hidden');
+                } else {
+                    twitterSection.classList.add('hidden');
+                    substackSection.classList.remove('hidden');
+                }
+                // Uncheck all generators
+                document.querySelectorAll('input[name="generator"]').forEach(cb => cb.checked = false);
+            });
+        });
+
+        // Logging
+        function log(message, type = 'info') {
+            const timestamp = new Date().toISOString().split('T')[1].split('.')[0];
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.innerHTML = `<span class="log-timestamp">[${timestamp}]</span> ${message}`;
+            logEl.appendChild(entry);
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        // Execute generation
+        executeBtn.addEventListener('click', async () => {
+            const selectedGenerators = Array.from(document.querySelectorAll('input[name="generator"]:checked'))
+                .map(cb => cb.value);
+
+            if (selectedGenerators.length === 0) {
+                log('No generators selected', 'error');
+                return;
+            }
+
+            const count = parseInt(document.getElementById('count').value);
+            const model = document.getElementById('model').value;
+            const format = document.getElementById('format').value;
+
+            isGenerating = true;
+            executeBtn.disabled = true;
+            statusEl.textContent = 'GENERATING...';
+
+            for (const generator of selectedGenerators) {
+                const startTime = Date.now();
+                try {
+                    log(`Executing ${generator}...`);
+
+                    // Add note about o3 being slow
+                    if (model === 'o3-2025-04-16') {
+                        log('Note: o3 models can take 30-120 seconds. Please wait...', 'info');
+                    }
+
+                    // Create AbortController with 5 minute timeout
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 minutes
+
+                    const response = await fetch('/api/generate', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            generator_type: generator,
+                            num_items: count,
+                            output_format: format,
+                            model: model
+                        }),
+                        signal: controller.signal
+                    });
+
+                    clearTimeout(timeoutId);
+
+                    const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.detail || 'Generation failed');
+                    }
+
+                    const result = await response.json();
+                    log(`${generator}: ${result.message} (${elapsed}s)`, 'success');
+
+                } catch (error) {
+                    const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+                    if (error.name === 'AbortError') {
+                        log(`${generator}: Timeout after 5 minutes. Backend may still be processing.`, 'error');
+                    } else {
+                        log(`${generator}: ${error.message} (${elapsed}s)`, 'error');
+                    }
+                }
+            }
+
+            isGenerating = false;
+            executeBtn.disabled = false;
+            statusEl.textContent = 'IDLE';
+
+            // Refresh output list
+            loadOutputs();
+        });
+
+        // Load outputs
+        async function loadOutputs() {
+            try {
+                const response = await fetch('/api/outputs');
+                const data = await response.json();
+
+                if (data.files.length === 0) {
+                    outputListEl.innerHTML = '<div style="color: #666; font-size: 12px;">No outputs yet.</div>';
+                    return;
+                }
+
+                outputListEl.innerHTML = '';
+                data.files.forEach(file => {
+                    const item = document.createElement('div');
+                    item.className = 'output-item';
+
+                    const modDate = new Date(file.modified).toLocaleString();
+                    const sizeKB = (file.size / 1024).toFixed(2);
+
+                    item.innerHTML = `
+                        <div class="output-item-name">${file.name}</div>
+                        <div class="output-item-meta">${sizeKB} KB | ${modDate}</div>
+                    `;
+
+                    item.addEventListener('click', () => {
+                        window.location.href = `/api/outputs/${file.name}`;
+                    });
+
+                    outputListEl.appendChild(item);
+                });
+
+            } catch (error) {
+                log(`Failed to load outputs: ${error.message}`, 'error');
+            }
+        }
+
+        // Article Generator Functions
+        let articleInputsCache = null;
+
+        async function checkArticleAvailability() {
+            try {
+                const response = await fetch('/api/article/inputs');
+                const data = await response.json();
+                articleInputsCache = data;
+
+                const lockedEl = document.getElementById('article-generator-locked');
+                const unlockedEl = document.getElementById('article-generator-unlocked');
+
+                if (data.can_generate) {
+                    lockedEl.classList.add('hidden');
+                    unlockedEl.classList.remove('hidden');
+                    populateArticleDropdowns(data);
+                } else {
+                    lockedEl.classList.remove('hidden');
+                    unlockedEl.classList.add('hidden');
+                }
+
+                // FORCE modal to stay hidden after availability check
+                const modal = document.getElementById('article-modal');
+                if (modal) {
+                    modal.classList.add('hidden');
+                }
+            } catch (error) {
+                console.error('Failed to check article availability:', error);
+                // Even on error, ensure modal stays hidden
+                const modal = document.getElementById('article-modal');
+                if (modal) {
+                    modal.classList.add('hidden');
+                }
+            }
+        }
+
+        function populateArticleDropdowns(data) {
+            const demoSelect = document.getElementById('article-demographic');
+            const styleSelect = document.getElementById('article-style');
+
+            // Populate demographics
+            demoSelect.innerHTML = '<option value="">Select demographic...</option>';
+            data.demographics.forEach(demo => {
+                const option = document.createElement('option');
+                option.value = demo.label;
+                option.textContent = demo.label;
+                demoSelect.appendChild(option);
+            });
+
+            // Populate styles
+            styleSelect.innerHTML = '<option value="">Select style...</option>';
+            data.styles.forEach(style => {
+                const option = document.createElement('option');
+                option.value = style.name;
+                option.textContent = style.name;
+                styleSelect.appendChild(option);
+            });
+        }
+
+        // Modal controls
+        const modal = document.getElementById('article-modal');
+        const showFormBtn = document.getElementById('show-article-form');
+        const cancelBtn = document.getElementById('cancel-article-btn');
+        const generateBtn = document.getElementById('generate-article-btn');
+
+        if (showFormBtn) {
+            showFormBtn.addEventListener('click', () => {
+                modal.classList.remove('hidden');
+            });
+        }
+
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', () => {
+                modal.classList.add('hidden');
+            });
+        }
+
+        // Close modal on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal && !modal.classList.contains('hidden')) {
+                modal.classList.add('hidden');
+            }
+        });
+
+        // Generate article
+        generateBtn?.addEventListener('click', async () => {
+            const demographic = document.getElementById('article-demographic').value;
+            const style = document.getElementById('article-style').value;
+            const topic = document.getElementById('article-topic').value;
+            const wordCount = document.querySelector('input[name="word-count"]:checked').value;
+            const model = document.getElementById('model').value;
+
+            if (!demographic || !style || !topic.trim()) {
+                log('Article generation: Missing required fields', 'error');
+                return;
+            }
+
+            try {
+                log('Generating article... This may take 30-120 seconds.');
+                modal.classList.add('hidden');
+                generateBtn.disabled = true;
+                statusEl.textContent = 'GENERATING ARTICLE...';
+
+                const startTime = Date.now();
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 minutes
+
+                const response = await fetch('/api/article/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        demographic_label: demographic,
+                        style_name: style,
+                        topic: topic,
+                        word_count: wordCount,
+                        model: model
+                    }),
+                    signal: controller.signal
+                });
+
+                clearTimeout(timeoutId);
+                const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Article generation failed');
+                }
+
+                const result = await response.json();
+                log(`Article generated: ${result.word_count} words (${elapsed}s)`, 'success');
+
+                // Clear form
+                document.getElementById('article-topic').value = '';
+
+                // Refresh outputs
+                loadOutputs();
+
+            } catch (error) {
+                const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+                if (error.name === 'AbortError') {
+                    log('Article generation timeout. Check outputs folder.', 'error');
+                } else {
+                    log(`Article generation error: ${error.message} (${elapsed}s)`, 'error');
+                }
+            } finally {
+                generateBtn.disabled = false;
+                statusEl.textContent = 'IDLE';
+            }
+        });
+
+        // Check system status on load
+        async function checkStatus() {
+            try {
+                const response = await fetch('/api/status');
+                const data = await response.json();
+
+                if (!data.openai_key_set) {
+                    log('WARNING: OPENAI_API_KEY not set', 'error');
+                }
+
+                log(`System operational. ${data.generators_available} generators available.`, 'success');
+            } catch (error) {
+                log('Failed to connect to backend', 'error');
+            }
+        }
+
+        // Theme Toggle Functionality
+        const themeToggle = document.getElementById('theme-toggle');
+        let currentTheme = localStorage.getItem('theme') || 'terminal';
+
+        function setTheme(theme) {
+            if (theme === 'soft') {
+                document.documentElement.setAttribute('data-theme', 'soft');
+                themeToggle.textContent = 'SOFT';
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+                themeToggle.textContent = 'TERMINAL';
+            }
+            localStorage.setItem('theme', theme);
+            currentTheme = theme;
+        }
+
+        themeToggle.addEventListener('click', () => {
+            const newTheme = currentTheme === 'terminal' ? 'soft' : 'terminal';
+            setTheme(newTheme);
+        });
+
+        // Initialize theme from localStorage
+        setTheme(currentTheme);
+
+        // Initialize
+        // FORCE modal to be hidden on load
+        const forceHideModal = () => {
+            const modal = document.getElementById('article-modal');
+            if (modal && !modal.classList.contains('hidden')) {
+                console.log('Forcing modal hidden');
+                modal.classList.add('hidden');
+            }
+        };
+
+        // Force hide multiple times during initialization
+        forceHideModal();
+        setTimeout(forceHideModal, 100);
+        setTimeout(forceHideModal, 500);
+        setTimeout(forceHideModal, 1000);
+
+        checkStatus();
+        loadOutputs();
+
+        // Wait before checking article availability to avoid race conditions
+        setTimeout(() => {
+            checkArticleAvailability();
+        }, 1500);
+
+        // Check article availability periodically (after outputs refresh)
+        setInterval(checkArticleAvailability, 10000); // Every 10 seconds
+    </script>
+</body>
+</html>

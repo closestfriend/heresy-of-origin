@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  cultural-monad-system:
+    build: .
+    container_name: cultural-monad-optimization
+    ports:
+      - "8000:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - PORT=8000
+      - PYTHONUNBUFFERED=1
+    volumes:
+      # Persistent storage for generated outputs
+      - ./outputs:/app/outputs
+      # Optional: Mount logs for debugging
+      - ./logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - monad-network
+
+networks:
+  monad-network:
+    driver: bridge
+
+# Optional: Add a volume for persistent data if not using bind mounts
+volumes:
+  monad-outputs:
+    driver: local

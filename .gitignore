@@ -1,0 +1,18 @@
+# Environment variables
+.env.local
+.env
+
+# Virtual environment
+venv/
+*.pyc
+__pycache__/
+
+# Generated outputs
+outputs/*
+!outputs/.gitkeep
+
+# Server logs
+server.log
+
+# OS files
+.DS_Store
