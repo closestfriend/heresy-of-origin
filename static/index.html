@@ -707,19 +707,8 @@
                     lockedEl.classList.remove('hidden');
                     unlockedEl.classList.add('hidden');
                 }
-
-                // FORCE modal to stay hidden after availability check
-                const modal = document.getElementById('article-modal');
-                if (modal) {
-                    modal.classList.add('hidden');
-                }
             } catch (error) {
                 console.error('Failed to check article availability:', error);
-                // Even on error, ensure modal stays hidden
-                const modal = document.getElementById('article-modal');
-                if (modal) {
-                    modal.classList.add('hidden');
-                }
             }
         }
 
