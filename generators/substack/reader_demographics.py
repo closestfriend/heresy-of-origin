@@ -1,30 +1,41 @@
 #!/usr/bin/env python3
 """
-Generate detailed, niche demographic profiles of Substack and Medium readers.
-These profiles include granular interests, behaviors, and semantic understanding vectors.
+Reader Demographics Generator - Granular Substack/Medium reader profiles.
+
+This monad generates hyper-specific micro-demographic profiles that capture
+real behavioral patterns and interest networks for content targeting.
 """
 
 import os
-import json
+import sys
 from datetime import datetime
-from openai import OpenAI
 
-def generate_reader_demographics(num_demographics=10, output_format="markdown"):
-    """
-    Generate diverse reader demographic profiles using OpenAI's API.
-    
-    Args:
-        num_demographics: Number of distinct demographics to generate (default: 10)
-        output_format: 'markdown' or 'json' (default: markdown)
-    
-    Returns:
-        Dictionary containing the generated demographics
-    """
-    
-    # Initialize OpenAI client (requires OPENAI_API_KEY environment variable)
-    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-    
-    prompt = f"""You are an expert in digital media demographics, sociology, and cultural analysis with deep knowledge of online reading communities.
+# Import shared utilities - the common protocol for all generators
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+from utils import (
+    get_llm_client,
+    get_default_model,
+    get_completion_params,
+    parse_llm_json_response,
+    save_output,
+    run_generation
+)
+
+# ============ CONFIGURATION ============
+
+GENERATOR_CONFIG = {
+    "name": "reader_demographics",
+    "item_keys": ["demographics", "reader_demographics", "profiles"],
+    "max_tokens": 6000,
+    "temperature": 0.8,
+}
+
+SYSTEM_PROMPT = """You are an expert in demographic analysis, cultural anthropology, and digital media consumption patterns. You create detailed, nuanced reader personas that capture authentic behavioral patterns and interest networks. Always respond with valid JSON."""
+
+
+def build_prompt(num_demographics: int) -> str:
+    """Build the user prompt for this generator."""
+    return f"""You are an expert in digital media demographics, sociology, and cultural analysis with deep knowledge of online reading communities.
 
 Generate {num_demographics} HIGHLY SPECIFIC and GRANULAR demographic profiles of Substack and Medium readers. These should be SUPER NICHE micro-demographics that capture real behavioral patterns.
 
@@ -61,166 +72,136 @@ Create genuinely interesting, realistic, multi-dimensional reader personas with 
 
 Return as a JSON object with a 'demographics' key containing an array of demographic objects. Each demographic object should have fields: label, identity_markers, reading_motivations, content_preferences, auxiliary_interests, media_diet, engagement_patterns, psychographic_profile, discovery_pathways, persona_quote."""
 
-    print("👥 Generating reader demographics using OpenAI...")
-    print(f"📊 Requesting {num_demographics} distinct demographic profiles...\n")
-    
-    # Call OpenAI API with the latest model
-    response = client.chat.completions.create(
-        model="gpt-4o",  # Using GPT-4o - fast and capable
-        messages=[
-            {"role": "system", "content": "You are an expert in demographic analysis, cultural anthropology, and digital media consumption patterns. You create detailed, nuanced reader personas that capture authentic behavioral patterns and interest networks."},
-            {"role": "user", "content": prompt}
-        ],
-        temperature=0.8,  # Higher temperature for creative variety
-        max_tokens=6000,  # Plenty for detailed profiles
-        response_format={"type": "json_object"}  # Ensure JSON output
-    )
-    
-    # Parse the response
-    content = response.choices[0].message.content
-    
-    # Check if content is empty
-    if not content:
-        print("❌ Error: API returned empty content")
-        print(f"Response object: {response}")
-        return None
-    
-    # Extract JSON from the response
-    try:
-        demographics_data = json.loads(content)
-        
-        # Handle different possible JSON structures
-        if isinstance(demographics_data, dict):
-            if "demographics" in demographics_data:
-                demographics = demographics_data["demographics"]
-            elif "reader_demographics" in demographics_data:
-                demographics = demographics_data["reader_demographics"]
-            elif "profiles" in demographics_data:
-                demographics = demographics_data["profiles"]
+
+# ============ MARKDOWN FORMATTER ============
+
+def format_markdown(data: dict, f) -> None:
+    """Format reader demographics as markdown - the unique output form of this monad."""
+    f.write("# Substack & Medium Reader Demographics\n\n")
+    f.write(f"*Generated on {data['generated_at']} using {data['model_used']}*\n\n")
+    f.write(f"**Total Demographics:** {data['num_demographics']}\n\n")
+    f.write("---\n\n")
+
+    for i, demo in enumerate(data['demographics'], 1):
+        f.write(f"## {i}. {demo.get('label', 'Untitled Demographic')}\n\n")
+
+        if 'identity_markers' in demo:
+            f.write("### Core Identity Markers\n")
+            markers = demo['identity_markers']
+            if isinstance(markers, list):
+                for marker in markers:
+                    f.write(f"- {marker}\n")
             else:
-                # Take the first list value found
-                for value in demographics_data.values():
-                    if isinstance(value, list):
-                        demographics = value
-                        break
-                else:
-                    demographics = [demographics_data]
-        else:
-            demographics = demographics_data
-            
-    except json.JSONDecodeError as e:
-        print(f"❌ Error parsing JSON: {e}")
-        if content:
-            print(f"Raw content: {content[:500]}...")
-        else:
-            print("Raw content is None or empty")
+                f.write(f"{markers}\n")
+            f.write("\n")
+
+        if 'reading_motivations' in demo:
+            f.write(f"**Primary Reading Motivations:** {demo['reading_motivations']}\n\n")
+
+        if 'content_preferences' in demo:
+            f.write(f"**Content Preferences:** {demo['content_preferences']}\n\n")
+
+        if 'auxiliary_interests' in demo:
+            f.write("### Auxiliary Interest Vectors\n")
+            interests = demo['auxiliary_interests']
+            if isinstance(interests, list):
+                for interest in interests:
+                    f.write(f"- {interest}\n")
+            else:
+                f.write(f"{interests}\n")
+            f.write("\n")
+
+        if 'media_diet' in demo:
+            f.write(f"**Media Diet:** {demo['media_diet']}\n\n")
+
+        if 'engagement_patterns' in demo:
+            f.write(f"**Engagement Patterns:** {demo['engagement_patterns']}\n\n")
+
+        if 'psychographic_profile' in demo:
+            f.write(f"**Psychographic Profile:** {demo['psychographic_profile']}\n\n")
+
+        if 'discovery_pathways' in demo:
+            f.write(f"**Discovery Pathways:** {demo['discovery_pathways']}\n\n")
+
+        if 'persona_quote' in demo:
+            f.write("**Persona Quote:**\n")
+            f.write(f"> {demo['persona_quote']}\n\n")
+
+        f.write("---\n\n")
+
+
+# ============ CORE FUNCTIONS ============
+
+def generate_reader_demographics(num_demographics=10, output_format="markdown", model=None):
+    """
+    Generate diverse reader demographic profiles.
+
+    Args:
+        num_demographics: Number of distinct demographics to generate
+        output_format: 'markdown' or 'json'
+        model: LLM model to use (defaults to configured default)
+
+    Returns:
+        Dictionary containing the generated demographics, or None on failure
+    """
+    client = get_llm_client()
+    model = model or get_default_model()
+
+    print(f"Starting generation: {num_demographics} reader demographics (model: {model})")
+
+    params = get_completion_params(
+        model,
+        max_tokens=GENERATOR_CONFIG["max_tokens"],
+        temperature=GENERATOR_CONFIG["temperature"]
+    )
+
+    response = client.chat.completions.create(
+        model=model,
+        messages=[
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": build_prompt(num_demographics)}
+        ],
+        **params
+    )
+
+    content = response.choices[0].message.content
+
+    if not content:
+        print("Error: API returned empty content")
         return None
-    
-    result = {
+
+    demographics, error = parse_llm_json_response(content, GENERATOR_CONFIG["item_keys"])
+
+    if error:
+        print(f"Error: {error}")
+        return None
+
+    return {
         "generated_at": datetime.now().isoformat(),
-        "model_used": "gpt-4o",
+        "model_used": model,
         "num_demographics": len(demographics),
         "demographics": demographics
     }
-    
-    return result
 
 
-def save_demographics(demographics_data, output_format="markdown"):
-    """Save the generated demographics to a file."""
-    
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    
-    if output_format == "json":
-        filename = f"reader_demographics_{timestamp}.json"
-        with open(filename, "w", encoding="utf-8") as f:
-            json.dump(demographics_data, f, indent=2, ensure_ascii=False)
-        print(f"✅ Saved demographics to {filename}")
-        
-    else:  # markdown
-        filename = f"reader_demographics_{timestamp}.md"
-        with open(filename, "w", encoding="utf-8") as f:
-            f.write("# Substack & Medium Reader Demographics\n\n")
-            f.write(f"*Generated on {demographics_data['generated_at']} using {demographics_data['model_used']}*\n\n")
-            f.write(f"**Total Demographics:** {demographics_data['num_demographics']}\n\n")
-            f.write("---\n\n")
-            
-            for i, demo in enumerate(demographics_data['demographics'], 1):
-                f.write(f"## {i}. {demo.get('label', 'Untitled Demographic')}\n\n")
-                
-                if 'identity_markers' in demo:
-                    f.write("### Core Identity Markers\n")
-                    markers = demo['identity_markers']
-                    if isinstance(markers, list):
-                        for marker in markers:
-                            f.write(f"- {marker}\n")
-                    else:
-                        f.write(f"{markers}\n")
-                    f.write("\n")
-                
-                if 'reading_motivations' in demo:
-                    f.write(f"**Primary Reading Motivations:** {demo['reading_motivations']}\n\n")
-                
-                if 'content_preferences' in demo:
-                    f.write(f"**Content Preferences:** {demo['content_preferences']}\n\n")
-                
-                if 'auxiliary_interests' in demo:
-                    f.write("### Auxiliary Interest Vectors\n")
-                    interests = demo['auxiliary_interests']
-                    if isinstance(interests, list):
-                        for interest in interests:
-                            f.write(f"- {interest}\n")
-                    else:
-                        f.write(f"{interests}\n")
-                    f.write("\n")
-                
-                if 'media_diet' in demo:
-                    f.write(f"**Media Diet:** {demo['media_diet']}\n\n")
-                
-                if 'engagement_patterns' in demo:
-                    f.write(f"**Engagement Patterns:** {demo['engagement_patterns']}\n\n")
-                
-                if 'psychographic_profile' in demo:
-                    f.write(f"**Psychographic Profile:** {demo['psychographic_profile']}\n\n")
-                
-                if 'discovery_pathways' in demo:
-                    f.write(f"**Discovery Pathways:** {demo['discovery_pathways']}\n\n")
-                
-                if 'persona_quote' in demo:
-                    f.write("**Persona Quote:**\n")
-                    f.write(f"> {demo['persona_quote']}\n\n")
-                
-                f.write("---\n\n")
-        
-        print(f"✅ Saved demographics to {filename}")
-    
-    return filename
+def save_demographics(data, output_format="markdown"):
+    """Save reader demographics to file."""
+    return save_output(
+        data,
+        prefix=GENERATOR_CONFIG["name"],
+        format_markdown=format_markdown,
+        output_format=output_format
+    )
 
 
 def main():
-    """Main execution function."""
-    
-    # Check for API key
-    if not os.getenv("OPENAI_API_KEY"):
-        print("❌ Error: OPENAI_API_KEY environment variable not set")
-        print("Please set it with: export OPENAI_API_KEY='your-api-key-here'")
-        return
-    
-    # Generate demographics
-    demographics_data = generate_reader_demographics(num_demographics=15, output_format="markdown")
-    
-    if demographics_data:
-        # Save in both formats
-        print("\n📄 Saving results...\n")
-        md_file = save_demographics(demographics_data, output_format="markdown")
-        json_file = save_demographics(demographics_data, output_format="json")
-        
-        print(f"\n✨ Success! Generated {demographics_data['num_demographics']} reader demographics")
-        print(f"📖 Read the markdown file for beautiful formatting")
-        print(f"🔧 Use the JSON file for programmatic access")
-        print("\n💡 You can now use these demographics to target specific reader personas!")
-    else:
-        print("❌ Failed to generate demographics")
+    """Standalone execution entry point."""
+    run_generation(
+        generate_reader_demographics,
+        save_demographics,
+        success_message="Reader demographics generated! Use these to target specific personas.",
+        num_demographics=15
+    )
 
 
 if __name__ == "__main__":

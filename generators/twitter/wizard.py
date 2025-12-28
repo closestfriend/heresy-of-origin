@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """
-If the algorithm dictates perception which dictates monadistic realities...
-Claude is the Wizard. 🔮
+The Wizard Generator - Implementation-level Twitter/X demographic profiles.
 
-Generate hyper-granular Twitter/X demographic profiles mapping:
+If the algorithm dictates perception which dictates monadistic realities...
+Claude is the Wizard.
+
+This monad generates hyper-granular demographic profiles mapping:
 - SOFT: Bourdieu-inspired cultural capital, habitus, being-in-the-world
-- HARD: Technical UI patterns, behavioral metrics, tool-at-hand psychology  
-- ALGORITHMIC: Deep understanding/exploitation of X's recommendation system
-  Based on actual implementation details from github.com/twitter/the-algorithm
+- HARD: Technical UI patterns, behavioral metrics, tool-at-hand psychology
+- ALGORITHMIC: Deep understanding of X's recommendation system
+  Based on actual implementation from github.com/twitter/the-algorithm
 
 Including awareness of:
 - The ~6000 features used in ranking
@@ -18,25 +20,62 @@ Including awareness of:
 """
 
 import os
-import json
+import sys
 from datetime import datetime
-from openai import OpenAI
 
-def generate_wizard_demographics(num_demographics=15, output_format="markdown"):
-    """
-    Generate the most sophisticated Twitter demographic profiles possible.
-    
-    Args:
-        num_demographics: Number of distinct demographics (default: 15)
-        output_format: 'markdown' or 'json'
-    
-    Returns:
-        Dictionary containing the generated demographics
-    """
-    
-    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-    
-    prompt = f"""You are THE WIZARD - an expert in digital sociology, Bourdieu's cultural capital theory, phenomenology of technology, platform psychology, AND the actual implementation details of X's recommendation algorithm.
+# Import shared utilities - the common protocol for all generators
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+from utils import (
+    get_llm_client,
+    get_default_model,
+    get_completion_params,
+    parse_llm_json_response,
+    save_output,
+    run_generation
+)
+
+# ============ CONFIGURATION ============
+
+GENERATOR_CONFIG = {
+    "name": "wizard_demographics",
+    "item_keys": ["demographics", "profiles", "personas", "tribes", "wizards"],
+    "max_tokens": 12000,
+    "temperature": 0.7,
+}
+
+SYSTEM_PROMPT = """You are THE WIZARD - a master of digital sociology, Bourdieu's theories, phenomenology, AND the actual implementation of X's recommendation algorithm. Always respond with valid JSON.
+
+You have studied the source code from github.com/twitter/the-algorithm (2023 release):
+
+RETRIEVAL SIGNALS (what matters):
+- HIGH: Tweet Favorite (used everywhere), Retweets, Quote Tweets, Replies
+- RANKING LABELS: Video Watch Time (seconds/percentage), Tweet Clicks
+- NEGATIVE: Unfavorite, Unfollow, "Don't Like", Report
+- Usage varies: SimClusters vs TwHIN vs UTEG vs FRS vs Light Ranker
+
+HOME MIXER ARCHITECTURE:
+- ~6000 features used for ranking (!!!)
+- Heuristics: Author Diversity, Content Balance (In/Out Network), Feedback Fatigue, Deduplication
+- Two-stage: Light-ranker -> Heavy-ranker (neural net)
+- Candidate sources: In-Network (Earlybird search ~50%) + Out-of-Network (UTEG/FRS)
+
+VISIBILITY FILTERING:
+- SafetyLabels -> Actions: Drop (hard filter), Interstitial (warning), Downranking (coarse-grained)
+- Different SafetyLevels per product surface (Timeline vs Profile)
+- "Part of the code has been removed and is not ready to be shared" - gaps exist
+
+THE GAP:
+- This is 2023 code, 2 years old
+- Elon-era changes unknown
+- Model weights not shared
+- Full 6000 feature set not documented
+
+You understand how different user types relate to this knowledge - from folk theories to technical mastery to epistemic humility about the unknowable."""
+
+
+def build_prompt(num_demographics: int) -> str:
+    """Build the comprehensive wizard demographics prompt."""
+    return f"""You are THE WIZARD - an expert in digital sociology, Bourdieu's cultural capital theory, phenomenology of technology, platform psychology, AND the actual implementation details of X's recommendation algorithm.
 
 You have studied the actual source code from github.com/twitter/the-algorithm (released 2023), including:
 - RETRIEVAL_SIGNALS.md showing which user actions matter and how (favorites, retweets, video watch, clicks, unfollows, etc.)
@@ -82,13 +121,13 @@ For each demographic, provide:
 **ALGORITHMIC AWARENESS (Implementation-Level)**
 
 **Core System Understanding:**
-14. **Code Literacy Level**: Do they understand the actual implementation? Scale: Folk Theory → Studied GitHub Repo → Can Read Scala → Understands ML Architecture → Knows The Gap
+14. **Code Literacy Level**: Do they understand the actual implementation? Scale: Folk Theory -> Studied GitHub Repo -> Can Read Scala -> Understands ML Architecture -> Knows The Gap
 
 15. **Signal Weights Awareness**: Do they know which signals actually matter from RETRIEVAL_SIGNALS.md?
     - HIGH VALUE: Favorites (used everywhere), Retweets, Quote Tweets, Replies, Video Watch Time, Tweet Clicks
     - NEGATIVE: Unfavorite, Unfollow, "Don't Like", Report
     - UNDERRATED: Video watch time as ranking signal, Tweet clicks as label
-    
+
 16. **The 6000 Features Problem**: Do they understand ranking uses ~6000 features? Their mental model (thinking it's 5 signals vs knowing it's 6000 they can't all optimize for)
 
 **Tactical Optimization:**
@@ -101,7 +140,7 @@ For each demographic, provide:
 20. **Feedback Fatigue Awareness**: Do they know repeated exposure without engagement = downranking? Strategic post spacing?
 
 **Visibility & Moderation:**
-21. **SafetyLabel Sophistication**: Do they understand SafetyLabels → Actions (Drop vs Interstitial vs Downranking)? Know different SafetyLevels?
+21. **SafetyLabel Sophistication**: Do they understand SafetyLabels -> Actions (Drop vs Interstitial vs Downranking)? Know different SafetyLevels?
 
 22. **Visibility Filter Navigation**: How close to boundaries do they operate? Understanding of "coarse-grained downranking" vs hard-filtering?
 
@@ -135,275 +174,204 @@ Cover tribes: rationalists, econ theory, ML/AI, cultural criticism, academic, re
 
 Return as JSON with fields: label, cultural_capital_markers, status_performance, habitus, capital_strategy, symbolic_boundaries, anxiety_patterns, subliminal_motivations, composition_patterns, ui_signature, temporal_patterns, engagement_calculus, tool_psychology, code_literacy_level, signal_weights_awareness, six_thousand_features_problem, video_watch_time_gaming, author_diversity_hacking, content_balance_theory, feedback_fatigue_awareness, safetylabel_sophistication, visibility_filter_navigation, the_2023_gap, folk_theory_vs_reality, capitalization_aesthetic, quote_tweet_ethics, ratioing_relationship, thread_culture, monadistic_reality_construction, persona_quote."""
 
-    print("🔮 THE WIZARD AWAKENS...")
-    print(f"✨ Generating {num_demographics} hyper-sophisticated demographic profiles...")
-    print("📖 Drawing from actual implementation details (github.com/twitter/the-algorithm)")
-    print("🧠 Mapping soft + hard + algorithmic + meta-awareness dimensions...\n")
-    
-    response = client.chat.completions.create(
-        model="o3-2025-04-16",
-        messages=[
-            {"role": "system", "content": """You are THE WIZARD - a master of digital sociology, Bourdieu's theories, phenomenology, AND the actual implementation of X's recommendation algorithm.
 
-You have studied the source code from github.com/twitter/the-algorithm (2023 release):
+# ============ MARKDOWN FORMATTER ============
 
-RETRIEVAL SIGNALS (what matters):
-- HIGH: Tweet Favorite (used everywhere), Retweets, Quote Tweets, Replies
-- RANKING LABELS: Video Watch Time (seconds/percentage), Tweet Clicks
-- NEGATIVE: Unfavorite, Unfollow, "Don't Like", Report
-- Usage varies: SimClusters vs TwHIN vs UTEG vs FRS vs Light Ranker
+def format_markdown(data: dict, f) -> None:
+    """Format wizard demographics as markdown - the unique output form of this monad."""
+    f.write("# The Wizard's Twitter Demographics\n\n")
+    f.write("## If the algorithm dictates perception which dictates monadistic realities... Claude is the Wizard\n\n")
+    f.write(f"*Generated on {data['generated_at']} using {data['model_used']}*\n\n")
+    f.write(f"*Based on actual implementation from {data['algorithm_source']}*\n\n")
 
-HOME MIXER ARCHITECTURE:
-- ~6000 features used for ranking (!!!)
-- Heuristics: Author Diversity, Content Balance (In/Out Network), Feedback Fatigue, Deduplication
-- Two-stage: Light-ranker → Heavy-ranker (neural net)
-- Candidate sources: In-Network (Earlybird search ~50%) + Out-of-Network (UTEG/FRS)
+    f.write("### Mapping Four Dimensions:\n")
+    f.write("1. **SOFT**: Cultural capital, habitus, being-in-the-world (Bourdieu-inspired)\n")
+    f.write("2. **HARD**: UI patterns, behavioral metrics, technical interactions\n")
+    f.write("3. **ALGORITHMIC**: Implementation-level understanding from actual source code\n")
+    f.write("   - ~6000 features in ranking\n")
+    f.write("   - Signal weights (favorites, video watch time, clicks)\n")
+    f.write("   - Heuristics (author diversity, content balance, feedback fatigue)\n")
+    f.write("   - SafetyLabels and visibility filtering\n")
+    f.write("4. **META**: Awareness of 2023 vs 2025 gap, epistemic humility, monadistic reality construction\n\n")
 
-VISIBILITY FILTERING:
-- SafetyLabels → Actions: Drop (hard filter), Interstitial (warning), Downranking (coarse-grained)
-- Different SafetyLevels per product surface (Timeline vs Profile)
-- "Part of the code has been removed and is not ready to be shared" - gaps exist
+    f.write(f"**Total Demographics:** {data['num_demographics']}\n\n")
+    f.write("---\n\n")
 
-THE GAP:
-- This is 2023 code, 2 years old
-- Elon-era changes unknown
-- Model weights not shared
-- Full 6000 feature set not documented
+    for i, demo in enumerate(data['demographics'], 1):
+        f.write(f"## {i}. {demo.get('label', 'Untitled Demographic')}\n\n")
 
-You understand how different user types relate to this knowledge - from folk theories to technical mastery to epistemic humility about the unknowable."""},
-            {"role": "user", "content": prompt}
-        ],
-        max_completion_tokens=12000,  # More tokens for this level of detail
-        response_format={"type": "json_object"}
-    )
-    
-    content = response.choices[0].message.content
-    
-    try:
-        demographics_data = json.loads(content)
-        
-        if isinstance(demographics_data, dict):
-            for key in ["demographics", "profiles", "personas", "tribes", "wizards"]:
-                if key in demographics_data:
-                    demographics = demographics_data[key]
-                    break
+        # SOFT INTERACTIONS
+        f.write("### SOFT INTERACTIONS (Being-in-the-World)\n\n")
+
+        if 'cultural_capital_markers' in demo:
+            f.write("**Cultural Capital Markers:**\n")
+            markers = demo['cultural_capital_markers']
+            if isinstance(markers, list):
+                for marker in markers:
+                    f.write(f"- {marker}\n")
             else:
-                for value in demographics_data.values():
-                    if isinstance(value, list):
-                        demographics = value
-                        break
-                else:
-                    demographics = [demographics_data]
-        else:
-            demographics = demographics_data
-            
-    except json.JSONDecodeError as e:
-        print(f"❌ Error parsing JSON: {e}")
-        print(f"Raw content: {content[:500]}...")
+                f.write(f"{markers}\n")
+            f.write("\n")
+
+        for field, label in [
+            ('status_performance', 'Status Position & Performance'),
+            ('habitus', 'Habitus on Platform'),
+            ('capital_strategy', 'Cultural Capital Strategy'),
+            ('symbolic_boundaries', 'Symbolic Boundaries'),
+            ('anxiety_patterns', 'Anxiety Patterns'),
+            ('subliminal_motivations', 'Subliminal Motivations'),
+        ]:
+            if field in demo:
+                f.write(f"**{label}:** {demo[field]}\n\n")
+
+        # HARD INTERACTIONS
+        f.write("### HARD INTERACTIONS (Technical/Behavioral)\n\n")
+
+        for field, label in [
+            ('composition_patterns', 'Composition Patterns'),
+            ('ui_signature', 'UI Interaction Signature'),
+            ('temporal_patterns', 'Temporal Patterns'),
+            ('engagement_calculus', 'Engagement Calculus'),
+            ('tool_psychology', 'Tool-at-Hand Psychology'),
+        ]:
+            if field in demo:
+                f.write(f"**{label}:** {demo[field]}\n\n")
+
+        # ALGORITHMIC AWARENESS
+        f.write("### ALGORITHMIC AWARENESS (Implementation-Level)\n\n")
+        f.write("**Core System Understanding:**\n\n")
+
+        for field, label in [
+            ('code_literacy_level', 'Code Literacy Level'),
+            ('signal_weights_awareness', 'Signal Weights Awareness'),
+            ('six_thousand_features_problem', 'The 6000 Features Problem'),
+        ]:
+            if field in demo:
+                f.write(f"**{label}:** {demo[field]}\n\n")
+
+        f.write("**Tactical Optimization:**\n\n")
+
+        for field, label in [
+            ('video_watch_time_gaming', 'Video Watch Time Gaming'),
+            ('author_diversity_hacking', 'Author Diversity Hacking'),
+            ('content_balance_theory', 'Content Balance Theory'),
+            ('feedback_fatigue_awareness', 'Feedback Fatigue Awareness'),
+        ]:
+            if field in demo:
+                f.write(f"**{label}:** {demo[field]}\n\n")
+
+        f.write("**Visibility & Moderation:**\n\n")
+
+        for field, label in [
+            ('safetylabel_sophistication', 'SafetyLabel Sophistication'),
+            ('visibility_filter_navigation', 'Visibility Filter Navigation'),
+        ]:
+            if field in demo:
+                f.write(f"**{label}:** {demo[field]}\n\n")
+
+        f.write("**Meta-Awareness:**\n\n")
+
+        for field, label in [
+            ('the_2023_gap', 'The 2023 Gap'),
+            ('folk_theory_vs_reality', 'Folk Theory vs Reality'),
+        ]:
+            if field in demo:
+                f.write(f"**{label}:** {demo[field]}\n\n")
+
+        # CROSS-CUTTING
+        f.write("### CROSS-CUTTING DIMENSIONS\n\n")
+
+        for field, label in [
+            ('capitalization_aesthetic', 'Capitalization Aesthetic'),
+            ('quote_tweet_ethics', 'Quote-Tweet vs Reply Ethics'),
+            ('ratioing_relationship', 'Ratioing Relationship'),
+            ('thread_culture', 'Thread Culture'),
+        ]:
+            if field in demo:
+                f.write(f"**{label}:** {demo[field]}\n\n")
+
+        # META
+        f.write("### META-AWARENESS\n\n")
+
+        if 'monadistic_reality_construction' in demo:
+            f.write(f"**Monadistic Reality Construction:** {demo['monadistic_reality_construction']}\n\n")
+
+        if 'persona_quote' in demo:
+            f.write("**Persona Quote:**\n")
+            f.write(f"> {demo['persona_quote']}\n\n")
+
+        f.write("---\n\n")
+
+
+# ============ CORE FUNCTIONS ============
+
+def generate_wizard_demographics(num_demographics=15, output_format="markdown", model=None):
+    """
+    Generate the most sophisticated Twitter demographic profiles possible.
+
+    Args:
+        num_demographics: Number of distinct demographics
+        output_format: 'markdown' or 'json'
+        model: LLM model to use
+
+    Returns:
+        Dictionary containing the generated demographics, or None on failure
+    """
+    client = get_llm_client()
+    model = model or get_default_model()
+
+    print(f"Starting generation: {num_demographics} wizard demographics (model: {model})")
+
+    params = get_completion_params(
+        model,
+        max_tokens=GENERATOR_CONFIG["max_tokens"],
+        temperature=GENERATOR_CONFIG["temperature"]
+    )
+
+    response = client.chat.completions.create(
+        model=model,
+        messages=[
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": build_prompt(num_demographics)}
+        ],
+        **params
+    )
+
+    content = response.choices[0].message.content
+    demographics, error = parse_llm_json_response(content, GENERATOR_CONFIG["item_keys"])
+
+    if error:
+        print(f"Error: {error}")
         return None
-    
-    result = {
+
+    return {
         "generated_at": datetime.now().isoformat(),
-        "model_used": "o3-2025-04-16",
+        "model_used": model,
         "algorithm_source": "github.com/twitter/the-algorithm (2023 release)",
         "num_demographics": len(demographics),
         "demographics": demographics
     }
-    
-    return result
 
 
-def save_wizard_demographics(demographics_data, output_format="markdown"):
-    """Save the wizard-generated demographics to a file."""
-    
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    
-    if output_format == "json":
-        filename = f"wizard_demographics_{timestamp}.json"
-        with open(filename, "w", encoding="utf-8") as f:
-            json.dump(demographics_data, f, indent=2, ensure_ascii=False)
-        print(f"✅ Saved demographics to {filename}")
-        
-    else:  # markdown
-        filename = f"wizard_demographics_{timestamp}.md"
-        with open(filename, "w", encoding="utf-8") as f:
-            f.write("# 🔮 The Wizard's Twitter Demographics\n\n")
-            f.write("## If the algorithm dictates perception which dictates monadistic realities... Claude is the Wizard\n\n")
-            f.write(f"*Generated on {demographics_data['generated_at']} using {demographics_data['model_used']}*\n\n")
-            f.write(f"*Based on actual implementation from {demographics_data['algorithm_source']}*\n\n")
-            
-            f.write("### Mapping Four Dimensions:\n")
-            f.write("1. **SOFT**: Cultural capital, habitus, being-in-the-world (Bourdieu-inspired)\n")
-            f.write("2. **HARD**: UI patterns, behavioral metrics, technical interactions\n")
-            f.write("3. **ALGORITHMIC**: Implementation-level understanding from actual source code\n")
-            f.write("   - ~6000 features in ranking\n")
-            f.write("   - Signal weights (favorites, video watch time, clicks)\n")
-            f.write("   - Heuristics (author diversity, content balance, feedback fatigue)\n")
-            f.write("   - SafetyLabels and visibility filtering\n")
-            f.write("4. **META**: Awareness of 2023 vs 2025 gap, epistemic humility, monadistic reality construction\n\n")
-            
-            f.write(f"**Total Demographics:** {demographics_data['num_demographics']}\n\n")
-            f.write("---\n\n")
-            
-            for i, demo in enumerate(demographics_data['demographics'], 1):
-                f.write(f"## {i}. {demo.get('label', 'Untitled Demographic')}\n\n")
-                
-                # SOFT INTERACTIONS
-                f.write("### 🌊 SOFT INTERACTIONS (Being-in-the-World)\n\n")
-                
-                if 'cultural_capital_markers' in demo:
-                    f.write("**Cultural Capital Markers:**\n")
-                    markers = demo['cultural_capital_markers']
-                    if isinstance(markers, list):
-                        for marker in markers:
-                            f.write(f"- {marker}\n")
-                    else:
-                        f.write(f"{markers}\n")
-                    f.write("\n")
-                
-                if 'status_performance' in demo:
-                    f.write(f"**Status Position & Performance:** {demo['status_performance']}\n\n")
-                
-                if 'habitus' in demo:
-                    f.write(f"**Habitus on Platform:** {demo['habitus']}\n\n")
-                
-                if 'capital_strategy' in demo:
-                    f.write(f"**Cultural Capital Strategy:** {demo['capital_strategy']}\n\n")
-                
-                if 'symbolic_boundaries' in demo:
-                    f.write(f"**Symbolic Boundaries:** {demo['symbolic_boundaries']}\n\n")
-                
-                if 'anxiety_patterns' in demo:
-                    f.write(f"**Anxiety Patterns:** {demo['anxiety_patterns']}\n\n")
-                
-                if 'subliminal_motivations' in demo:
-                    f.write(f"**Subliminal Motivations:** {demo['subliminal_motivations']}\n\n")
-                
-                # HARD INTERACTIONS
-                f.write("### ⚙️ HARD INTERACTIONS (Technical/Behavioral)\n\n")
-                
-                if 'composition_patterns' in demo:
-                    f.write(f"**Composition Patterns:** {demo['composition_patterns']}\n\n")
-                
-                if 'ui_signature' in demo:
-                    f.write(f"**UI Interaction Signature:** {demo['ui_signature']}\n\n")
-                
-                if 'temporal_patterns' in demo:
-                    f.write(f"**Temporal Patterns:** {demo['temporal_patterns']}\n\n")
-                
-                if 'engagement_calculus' in demo:
-                    f.write(f"**Engagement Calculus:** {demo['engagement_calculus']}\n\n")
-                
-                if 'tool_psychology' in demo:
-                    f.write(f"**Tool-at-Hand Psychology:** {demo['tool_psychology']}\n\n")
-                
-                # ALGORITHMIC AWARENESS
-                f.write("### 🤖 ALGORITHMIC AWARENESS (Implementation-Level)\n\n")
-                
-                f.write("**Core System Understanding:**\n\n")
-                
-                if 'code_literacy_level' in demo:
-                    f.write(f"**Code Literacy Level:** {demo['code_literacy_level']}\n\n")
-                
-                if 'signal_weights_awareness' in demo:
-                    f.write(f"**Signal Weights Awareness:** {demo['signal_weights_awareness']}\n\n")
-                
-                if 'six_thousand_features_problem' in demo:
-                    f.write(f"**The 6000 Features Problem:** {demo['six_thousand_features_problem']}\n\n")
-                
-                f.write("**Tactical Optimization:**\n\n")
-                
-                if 'video_watch_time_gaming' in demo:
-                    f.write(f"**Video Watch Time Gaming:** {demo['video_watch_time_gaming']}\n\n")
-                
-                if 'author_diversity_hacking' in demo:
-                    f.write(f"**Author Diversity Hacking:** {demo['author_diversity_hacking']}\n\n")
-                
-                if 'content_balance_theory' in demo:
-                    f.write(f"**Content Balance Theory:** {demo['content_balance_theory']}\n\n")
-                
-                if 'feedback_fatigue_awareness' in demo:
-                    f.write(f"**Feedback Fatigue Awareness:** {demo['feedback_fatigue_awareness']}\n\n")
-                
-                f.write("**Visibility & Moderation:**\n\n")
-                
-                if 'safetylabel_sophistication' in demo:
-                    f.write(f"**SafetyLabel Sophistication:** {demo['safetylabel_sophistication']}\n\n")
-                
-                if 'visibility_filter_navigation' in demo:
-                    f.write(f"**Visibility Filter Navigation:** {demo['visibility_filter_navigation']}\n\n")
-                
-                f.write("**Meta-Awareness:**\n\n")
-                
-                if 'the_2023_gap' in demo:
-                    f.write(f"**The 2023 Gap:** {demo['the_2023_gap']}\n\n")
-                
-                if 'folk_theory_vs_reality' in demo:
-                    f.write(f"**Folk Theory vs Reality:** {demo['folk_theory_vs_reality']}\n\n")
-                
-                # CROSS-CUTTING
-                f.write("### 🔀 CROSS-CUTTING DIMENSIONS\n\n")
-                
-                if 'capitalization_aesthetic' in demo:
-                    f.write(f"**Capitalization Aesthetic:** {demo['capitalization_aesthetic']}\n\n")
-                
-                if 'quote_tweet_ethics' in demo:
-                    f.write(f"**Quote-Tweet vs Reply Ethics:** {demo['quote_tweet_ethics']}\n\n")
-                
-                if 'ratioing_relationship' in demo:
-                    f.write(f"**Ratioing Relationship:** {demo['ratioing_relationship']}\n\n")
-                
-                if 'thread_culture' in demo:
-                    f.write(f"**Thread Culture:** {demo['thread_culture']}\n\n")
-                
-                # META
-                f.write("### 🎭 META-AWARENESS\n\n")
-                
-                if 'monadistic_reality_construction' in demo:
-                    f.write(f"**Monadistic Reality Construction:** {demo['monadistic_reality_construction']}\n\n")
-                
-                if 'persona_quote' in demo:
-                    f.write("**Persona Quote:**\n")
-                    f.write(f"> {demo['persona_quote']}\n\n")
-                
-                f.write("---\n\n")
-        
-        print(f"✅ Saved demographics to {filename}")
-    
-    return filename
+def save_wizard_demographics(data, output_format="markdown"):
+    """Save wizard demographics to file."""
+    return save_output(
+        data,
+        prefix=GENERATOR_CONFIG["name"],
+        format_markdown=format_markdown,
+        output_format=output_format
+    )
 
 
 def main():
-    """The Wizard's main incantation."""
-    
-    if not os.getenv("OPENAI_API_KEY"):
-        print("❌ Error: OPENAI_API_KEY environment variable not set")
-        print("The Wizard requires an API key to channel the algorithmic spirits")
-        print("Please set it with: export OPENAI_API_KEY='your-api-key-here'")
-        return
-    
-    demographics_data = generate_wizard_demographics(num_demographics=18, output_format="markdown")
-    
-    if demographics_data:
-        print("\n📄 Materializing the Wizard's visions...\n")
-        md_file = save_wizard_demographics(demographics_data, output_format="markdown")
-        json_file = save_wizard_demographics(demographics_data, output_format="json")
-        
-        print(f"\n🔮 Success! The Wizard has generated {demographics_data['num_demographics']} demographic profiles")
-        print(f"📖 Read the markdown file for the full prophecy")
-        print(f"🔧 Use the JSON file for programmatic divination")
-        print("\n✨ The Wizard has spoken:")
-        print("   - Mapped from actual source code (github.com/twitter/the-algorithm)")
-        print("   - ~6000 features, signal weights, heuristics revealed")
-        print("   - SafetyLabels, visibility filters, the whole machinery")
-        print("   - Meta-awareness: 2023 vs 2025 gap, epistemic humility")
-        print("   - Monadistic reality construction mapped")
-        print("\n🎭 If the algorithm dictates perception which dictates monadistic realities...")
-        print("   Claude is indeed the Wizard. 🧙‍♂️")
-    else:
-        print("❌ The Wizard's spell failed")
+    """The Wizard's standalone execution entry point."""
+    run_generation(
+        generate_wizard_demographics,
+        save_wizard_demographics,
+        success_message="The Wizard has spoken! Monadistic realities mapped.",
+        num_demographics=18
+    )
 
 
 if __name__ == "__main__":
     main()
-
